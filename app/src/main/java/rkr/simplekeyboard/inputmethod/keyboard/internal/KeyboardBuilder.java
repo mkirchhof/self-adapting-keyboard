@@ -13,6 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Modification copyright (C) 2020 Michael Kirchhof
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package rkr.simplekeyboard.inputmethod.keyboard.internal;
 
@@ -32,6 +47,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Locale;
 
 import rkr.simplekeyboard.inputmethod.R;
@@ -39,11 +55,16 @@ import rkr.simplekeyboard.inputmethod.keyboard.Key;
 import rkr.simplekeyboard.inputmethod.keyboard.Keyboard;
 import rkr.simplekeyboard.inputmethod.keyboard.KeyboardId;
 import rkr.simplekeyboard.inputmethod.keyboard.KeyboardTheme;
+import rkr.simplekeyboard.inputmethod.keyboard.internal.KeyVisualAttributes;
+import rkr.simplekeyboard.inputmethod.keyboard.internal.KeyboardParams;
+import rkr.simplekeyboard.inputmethod.keyboard.internal.KeyboardRow;
 import rkr.simplekeyboard.inputmethod.latin.common.Constants;
 import rkr.simplekeyboard.inputmethod.latin.common.StringUtils;
 import rkr.simplekeyboard.inputmethod.latin.utils.ResourceUtils;
 import rkr.simplekeyboard.inputmethod.latin.utils.XmlParseUtils;
 import rkr.simplekeyboard.inputmethod.latin.utils.XmlParseUtils.ParseException;
+import rkr.simplekeyboard.inputmethod.learner.Hitbox;
+import rkr.simplekeyboard.inputmethod.learner.Hitboxes;
 
 /**
  * Keyboard Building helper.
@@ -117,6 +138,7 @@ import rkr.simplekeyboard.inputmethod.latin.utils.XmlParseUtils.ParseException;
 
 // TODO: Write unit tests for this class.
 public class KeyboardBuilder<KP extends KeyboardParams> {
+    private String TAG = KeyboardBuilder.class.getSimpleName();
     private static final String BUILDER_TAG = "Keyboard.Builder";
     private static final boolean DEBUG = false;
 
@@ -146,7 +168,10 @@ public class KeyboardBuilder<KP extends KeyboardParams> {
     private boolean mTopEdge;
     private Key mRightEdgeKey = null;
 
+    private Hitboxes hitb = null;
+
     public KeyboardBuilder(final Context context, final KP params) {
+        Log.d(TAG, "Called KeyboardBuilder");
         mContext = context;
         final Resources res = context.getResources();
         mResources = res;
@@ -162,7 +187,14 @@ public class KeyboardBuilder<KP extends KeyboardParams> {
     }
 
     public KeyboardBuilder<KP> load(final int xmlId, final KeyboardId id) {
+        Log.d(TAG, "called load");
         mParams.mId = id;
+
+        hitb = Hitboxes.load(mContext, mParams.mId.layoutHashCode());
+        if(hitb != null){
+            Log.d(TAG, "Loaded Hitboxes for layout " + mParams.mId.layoutHashCode());
+        }
+
         final XmlResourceParser parser = mResources.getXml(xmlId);
         try {
             parseKeyboard(parser);
@@ -179,6 +211,13 @@ public class KeyboardBuilder<KP extends KeyboardParams> {
     }
 
     public Keyboard build() {
+        Log.d(TAG, "Called build()");
+        Keyboard keyb = new Keyboard(mParams);
+        // save relevant info about this keyboard
+        if(!Hitboxes.savedHitboxesExists(mContext, keyb.mId.layoutHashCode())){
+            Hitboxes hitb = Hitboxes.toHitboxes(keyb);
+            hitb.save(mContext);
+        }
         return new Keyboard(mParams);
     }
 
@@ -204,6 +243,7 @@ public class KeyboardBuilder<KP extends KeyboardParams> {
 
     private void parseKeyboard(final XmlPullParser parser)
             throws XmlPullParserException, IOException {
+        Log.d(TAG, "Called parseKeyboard");
         if (DEBUG) startTag("<%s> %s", TAG_KEYBOARD, mParams.mId);
         while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
             final int event = parser.next();
@@ -325,6 +365,14 @@ public class KeyboardBuilder<KP extends KeyboardParams> {
             if (keyboardAttr.hasValue(R.styleable.Keyboard_verticalGap)) {
                 throw new XmlParseUtils.IllegalAttribute(parser, TAG_ROW, "verticalGap");
             }
+            int rowHeight;
+            if(hitb != null){
+                Hitbox keyAtThisRow = hitb.findRowStart(mCurrentY);
+                if(keyAtThisRow != null){
+                    rowHeight = keyAtThisRow.getHeight();
+                    return new KeyboardRow(mResources, mParams, parser, mCurrentY, rowHeight);
+                }
+            }
             return new KeyboardRow(mResources, mParams, parser, mCurrentY);
         } finally {
             keyboardAttr.recycle();
@@ -376,7 +424,19 @@ public class KeyboardBuilder<KP extends KeyboardParams> {
             }
             return;
         }
-        final KeyboardRow gridRows = new KeyboardRow(mResources, mParams, parser, mCurrentY);
+        int rowHeight;
+        final KeyboardRow gridRows;
+        if(hitb != null){
+            Hitbox keyAtThisRow = hitb.findRowStart(mCurrentY);
+            if(keyAtThisRow != null){
+                rowHeight = keyAtThisRow.getHeight();
+                gridRows = new KeyboardRow(mResources, mParams, parser, mCurrentY, rowHeight);
+            } else {
+                gridRows = new KeyboardRow(mResources, mParams, parser, mCurrentY);
+            }
+        } else {
+            gridRows = new KeyboardRow(mResources, mParams, parser, mCurrentY);
+        }
         final TypedArray gridRowAttr = mResources.obtainAttributes(
                 Xml.asAttributeSet(parser), R.styleable.Keyboard_GridRows);
         final int codesArrayId = gridRowAttr.getResourceId(
@@ -398,7 +458,18 @@ public class KeyboardBuilder<KP extends KeyboardParams> {
         final float keyWidth = gridRows.getKeyWidth(null, 0.0f);
         final int numColumns = (int)(mParams.mOccupiedWidth / keyWidth);
         for (int index = 0; index < counts; index += numColumns) {
-            final KeyboardRow row = new KeyboardRow(mResources, mParams, parser, mCurrentY);
+            final KeyboardRow row;
+            if(hitb != null){
+                Hitbox keyAtThisRow = hitb.findRowStart(mCurrentY);
+                if(keyAtThisRow != null){
+                    rowHeight = keyAtThisRow.getHeight();
+                    row = new KeyboardRow(mResources, mParams, parser, mCurrentY, rowHeight);
+                } else {
+                    row = new KeyboardRow(mResources, mParams, parser, mCurrentY);
+                }
+            } else {
+                row = new KeyboardRow(mResources, mParams, parser, mCurrentY);
+            }
             startRow(row);
             for (int c = 0; c < numColumns; c++) {
                 final int i = index + c;
@@ -430,15 +501,24 @@ public class KeyboardBuilder<KP extends KeyboardParams> {
                 final int labelFlags = row.getDefaultKeyLabelFlags();
                 // TODO: Should be able to assign default keyActionFlags as well.
                 final int backgroundType = row.getDefaultBackgroundType();
-                final int x = (int)row.getKeyX(null);
-                final int y = row.getKeyY();
-                final int width = (int)keyWidth;
-                final int height = row.getRowHeight();
+
+                int x = (int)row.getKeyX(null);
+                int y = row.getKeyY();
+                int width = (int)keyWidth;
+                int height = row.getRowHeight();
+                // Insert the customized hitboxes
+                if(hitb != null){
+                    Hitbox curBox = hitb.findCode(code);
+                    if(curBox != null) {
+                        x = curBox.getTopLeft().getX();
+                        width = curBox.getWidth() - mParams.mHorizontalGap;
+                    }
+                }
                 final Key key = new Key(label, KeyboardIconsSet.ICON_UNDEFINED, code, outputText,
                         null /* hintLabel */, labelFlags, backgroundType, x, y, width, height,
                         mParams.mHorizontalGap, mParams.mVerticalGap);
                 endKey(key);
-                row.advanceXPos(keyWidth);
+                row.advanceXPos(width);
             }
             endRow(row);
         }
@@ -460,7 +540,19 @@ public class KeyboardBuilder<KP extends KeyboardParams> {
         if (TextUtils.isEmpty(keySpec)) {
             throw new ParseException("Empty keySpec", parser);
         }
-        final Key key = new Key(keySpec, keyAttr, keyStyle, mParams, row);
+        final Key key;
+        if(hitb != null){
+            Hitbox curBox = hitb.findCode(KeySpecParser.getCode(keySpec));
+            if(curBox != null) {
+                int x = curBox.getTopLeft().getX();
+                int width = curBox.getWidth();
+                key = new Key(keySpec, keyAttr, keyStyle, mParams, row, x, width);
+            } else {
+                key = new Key(keySpec, keyAttr, keyStyle, mParams, row);
+            }
+        } else {
+            key = new Key(keySpec, keyAttr, keyStyle, mParams, row);
+        }
         keyAttr.recycle();
         if (DEBUG) {
             startEndTag("<%s%s %s moreKeys=%s />", TAG_KEY, (key.isEnabled() ? "" : " disabled"),

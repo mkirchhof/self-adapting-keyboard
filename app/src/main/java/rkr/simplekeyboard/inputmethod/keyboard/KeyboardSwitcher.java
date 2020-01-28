@@ -13,6 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Modification copyright (C) 2020 Michael Kirchhof
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package rkr.simplekeyboard.inputmethod.keyboard;
 
@@ -23,6 +38,8 @@ import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+
+import java.io.File;
 
 import rkr.simplekeyboard.inputmethod.R;
 import rkr.simplekeyboard.inputmethod.event.Event;
@@ -38,6 +55,7 @@ import rkr.simplekeyboard.inputmethod.latin.utils.CapsModeUtils;
 import rkr.simplekeyboard.inputmethod.latin.utils.LanguageOnSpacebarUtils;
 import rkr.simplekeyboard.inputmethod.latin.utils.RecapitalizeStatus;
 import rkr.simplekeyboard.inputmethod.latin.utils.ResourceUtils;
+import rkr.simplekeyboard.inputmethod.learner.Hitboxes;
 
 public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private static final String TAG = KeyboardSwitcher.class.getSimpleName();
@@ -55,6 +73,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private final KeyboardTextsSet mKeyboardTextsSet = new KeyboardTextsSet();
 
     private KeyboardTheme mKeyboardTheme;
+    private Long mLayoutLastUpdated;
     private Context mThemeContext;
 
     private static final KeyboardSwitcher sInstance = new KeyboardSwitcher();
@@ -92,6 +111,32 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             mThemeContext = new ContextThemeWrapper(context, keyboardTheme.mStyleId);
             KeyboardLayoutSet.onKeyboardThemeChanged();
             return true;
+        }
+        return false;
+    }
+
+    public void updateKeyboardLayout(){
+        final boolean layoutUpdated = updateKeyboardLayoutWrapper(mLatinIME);
+        if(layoutUpdated && mKeyboardView != null){
+            mLatinIME.setInputView(onCreateInputView());
+        }
+    }
+
+    private boolean updateKeyboardLayoutWrapper(final Context context){
+        Keyboard curKeyboard = getKeyboard();
+        if(curKeyboard != null){
+            final int layoutHashCode = curKeyboard.mId.layoutHashCode();
+            Long lastUpdate = Hitboxes.lastUpdateHitboxes(context, layoutHashCode);
+            // update necessary if:
+            // last known file creation time is null, but now isnt null (new hitboxes file created)
+            // last known file is not null, but now it is (hitboxes got deleted and reset)
+            // newer hitboxes file available (layout got updated)
+            if(!(mLayoutLastUpdated == null & lastUpdate == null) &&
+                    (mLayoutLastUpdated == null || lastUpdate == null || !mLayoutLastUpdated.equals(lastUpdate))){
+                mLayoutLastUpdated = lastUpdate;
+                KeyboardLayoutSet.onKeyboardLayoutChanged();
+                return true;
+            }
         }
         return false;
     }
@@ -376,6 +421,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
         updateKeyboardThemeAndContextThemeWrapper(
                 mLatinIME, KeyboardTheme.getKeyboardTheme(mLatinIME /* context */));
+        updateKeyboardLayoutWrapper(mLatinIME);
         mCurrentInputView = (InputView)LayoutInflater.from(mThemeContext).inflate(
                 R.layout.input_view, null);
         mMainKeyboardFrame = mCurrentInputView.findViewById(R.id.main_keyboard_frame);

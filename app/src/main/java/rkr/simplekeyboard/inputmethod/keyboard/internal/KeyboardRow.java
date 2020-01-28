@@ -13,6 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Modification copyright (C) 2020 Michael Kirchhof
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package rkr.simplekeyboard.inputmethod.keyboard.internal;
 
@@ -100,6 +115,23 @@ public final class KeyboardRow {
                 R.styleable.Keyboard);
         mRowHeight = (int)ResourceUtils.getDimensionOrFraction(keyboardAttr,
                 R.styleable.Keyboard_rowHeight, params.mBaseHeight, params.mDefaultRowHeight);
+        keyboardAttr.recycle();
+        final TypedArray keyAttr = res.obtainAttributes(Xml.asAttributeSet(parser),
+                R.styleable.Keyboard_Key);
+        mRowAttributesStack.push(new RowAttributes(
+                keyAttr, params.mDefaultKeyWidth, params.mBaseWidth));
+        keyAttr.recycle();
+
+        mCurrentY = y;
+        mCurrentX = 0.0f;
+    }
+
+    public KeyboardRow(final Resources res, final KeyboardParams params,
+                       final XmlPullParser parser, final int y, final int height) {
+        mParams = params;
+        final TypedArray keyboardAttr = res.obtainAttributes(Xml.asAttributeSet(parser),
+                R.styleable.Keyboard);
+        mRowHeight = height;
         keyboardAttr.recycle();
         final TypedArray keyAttr = res.obtainAttributes(Xml.asAttributeSet(parser),
                 R.styleable.Keyboard_Key);

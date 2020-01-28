@@ -13,6 +13,20 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
+<!-- Modifications Copyright (C) 2020 Michael Kirchhof
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:key="english_ime_settings">
@@ -28,4 +42,8 @@
         android:fragment="rkr.simplekeyboard.inputmethod.latin.settings.AdvancedSettingsFragment"
         android:title="@string/settings_screen_advanced"
         android:key="screen_advanced" />
+    <PreferenceScreen
+        android:fragment="rkr.simplekeyboard.inputmethod.latin.settings.LearnerSettingsFragment"
+        android:title="Tailored Layouts"
+        android:key="screen_learner" />
 </PreferenceScreen>

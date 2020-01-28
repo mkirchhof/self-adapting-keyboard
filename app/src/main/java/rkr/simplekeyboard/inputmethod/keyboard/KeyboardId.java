@@ -13,6 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Modification copyright (C) 2020 Michael Kirchhof
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package rkr.simplekeyboard.inputmethod.keyboard;
 
@@ -67,6 +82,7 @@ public final class KeyboardId {
     public final boolean mShowNumberRow;
 
     private final int mHashCode;
+    private final int mLayoutHashCode;
 
     public KeyboardId(final int elementId, final KeyboardLayoutSet.Params params) {
         mSubtype = params.mSubtype;
@@ -83,6 +99,18 @@ public final class KeyboardId {
         mShowNumberRow = params.mShowNumberRow;
 
         mHashCode = computeHashCode(this);
+        // mLayoutHashCode is a simplified version of mHashCode that is only interested in which
+        // keys are shown in which layout
+        mLayoutHashCode = computeLayoutHashCode(this);
+    }
+
+    private static int computeLayoutHashCode(final KeyboardId id){
+        return Arrays.hashCode(new Object[] {
+                simplifyElementId(id.mElementId),
+                id.mSubtype.getLocale().hashCode(),
+                id.mWidth,
+                id.mHeight
+        });
     }
 
     private static int computeHashCode(final KeyboardId id) {
@@ -167,6 +195,10 @@ public final class KeyboardId {
         return mHashCode;
     }
 
+    public int layoutHashCode(){
+        return mLayoutHashCode;
+    }
+    /*
     @Override
     public String toString() {
         return String.format(Locale.ROOT, "[%s %s:%s %dx%d %s %s%s%s%s%s%s%s%s%s]",
@@ -183,6 +215,24 @@ public final class KeyboardId {
                 (mLanguageSwitchKeyEnabled ? " languageSwitchKeyEnabled" : ""),
                 (isMultiLine() ? " isMultiLine" : "")
         );
+    }
+     */
+
+    @Override
+    public String toString() {
+        return "" +
+                elementIdToName(mElementId) +
+                mSubtype.getLocale() +
+                mSubtype.getExtraValueOf(KEYBOARD_LAYOUT_SET) +
+                mWidth + mHeight +
+                modeName(mMode) +
+                actionName(imeAction()) +
+                (navigateNext() ? " navigateNext" : "") +
+                (navigatePrevious() ? " navigatePrevious" : "") +
+                (mClobberSettingsKey ? " clobberSettingsKey" : "") +
+                (passwordInput() ? " passwordInput" : "") +
+                (mLanguageSwitchKeyEnabled ? " languageSwitchKeyEnabled" : "") +
+                (isMultiLine() ? " isMultiLine" : "");
     }
 
     public static boolean equivalentEditorInfoForKeyboard(final EditorInfo a, final EditorInfo b) {
@@ -206,6 +256,22 @@ public final class KeyboardId {
         case ELEMENT_PHONE_SYMBOLS: return "phoneSymbols";
         case ELEMENT_NUMBER: return "number";
         default: return null;
+        }
+    }
+
+    public static int simplifyElementId(final int elementId) {
+        switch (elementId) {
+            case ELEMENT_ALPHABET: return ELEMENT_ALPHABET;
+            case ELEMENT_ALPHABET_MANUAL_SHIFTED: return ELEMENT_ALPHABET;
+            case ELEMENT_ALPHABET_AUTOMATIC_SHIFTED: return ELEMENT_ALPHABET;
+            case ELEMENT_ALPHABET_SHIFT_LOCKED: return ELEMENT_ALPHABET;
+            case ELEMENT_ALPHABET_SHIFT_LOCK_SHIFTED: return ELEMENT_ALPHABET;
+            case ELEMENT_SYMBOLS: return ELEMENT_SYMBOLS;
+            case ELEMENT_SYMBOLS_SHIFTED: return ELEMENT_SYMBOLS;
+            case ELEMENT_PHONE: return ELEMENT_PHONE;
+            case ELEMENT_PHONE_SYMBOLS: return ELEMENT_PHONE;
+            case ELEMENT_NUMBER: return ELEMENT_NUMBER;
+            default: return 0;
         }
     }
 

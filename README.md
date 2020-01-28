@@ -38,4 +38,4 @@ Feature it doesn't have and probably will never have:
 
 Licensed under Apache License Version 2
 
-This keyboard is based on AOSP LatineIME keyboard. You can get the original source code in https://android.googlesource.com/platform/packages/inputmethods/LatinIME/
+This keyboard is based on the SimpleKeyboard, which again is based on the AOSP LatineIME keyboard. You can get the original source code in https://android.googlesource.com/platform/packages/inputmethods/LatinIME/

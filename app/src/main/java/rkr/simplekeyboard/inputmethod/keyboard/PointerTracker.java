@@ -13,7 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/*
+ * Modification copyright (C) 2020 Michael Kirchhof
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package rkr.simplekeyboard.inputmethod.keyboard;
 
 import android.content.res.Resources;
@@ -209,6 +223,38 @@ public final class PointerTracker implements PointerTrackerQueue.Element {
         }
         if (key.isEnabled()) {
             sListener.onPressKey(key.getCode(), repeatCount, getActivePointerTrackerCount() == 1);
+            final boolean keyboardLayoutHasBeenChanged = mKeyboardLayoutHasBeenChanged;
+            mKeyboardLayoutHasBeenChanged = false;
+            sTimerProxy.startTypingStateTimer(key);
+            return keyboardLayoutHasBeenChanged;
+        }
+        return false;
+    }
+
+    // Returns true if keyboard has been changed by this callback.
+    private boolean callListenerOnPressAndCheckKeyboardLayoutChange(final Key key,
+                                                                    final int repeatCount, int x, int y) {
+        // While gesture input is going on, this method should be a no-operation. But when gesture
+        // input has been canceled, <code>sInGesture</code> and <code>mIsDetectingGesture</code>
+        // are set to false. To keep this method is a no-operation,
+        // <code>mIsTrackingForActionDisabled</code> should also be taken account of.
+        final boolean ignoreModifierKey = mIsInDraggingFinger && key.isModifier();
+        if (DEBUG_LISTENER) {
+            Log.d(TAG, String.format("[%d] onPress    : %s%s%s%s", mPointerId,
+                    (key == null ? "none" : Constants.printableCode(key.getCode())),
+                    ignoreModifierKey ? " ignoreModifier" : "",
+                    key.isEnabled() ? "" : " disabled",
+                    repeatCount > 0 ? " repeatCount=" + repeatCount : ""));
+        }
+        if (ignoreModifierKey) {
+            return false;
+        }
+        if (key.isEnabled()) {
+            char keyLabel = ' ';
+            if(key.getLabel() != null){
+                keyLabel = key.getLabel().charAt(0);
+            }
+            sListener.onPressKey(key.getCode(), keyLabel, repeatCount, getActivePointerTrackerCount() == 1, x, y);
             final boolean keyboardLayoutHasBeenChanged = mKeyboardLayoutHasBeenChanged;
             mKeyboardLayoutHasBeenChanged = false;
             sTimerProxy.startTypingStateTimer(key);
@@ -508,7 +554,7 @@ public final class PointerTracker implements PointerTrackerQueue.Element {
             // This onPress call may have changed keyboard layout. Those cases are detected at
             // {@link #setKeyboard}. In those cases, we should update key according to the new
             // keyboard layout.
-            if (callListenerOnPressAndCheckKeyboardLayoutChange(key, 0 /* repeatCount */)) {
+            if (callListenerOnPressAndCheckKeyboardLayoutChange(key, 0 /* repeatCount */, x, y)) {
                 key = onDownKey(x, y);
             }
 

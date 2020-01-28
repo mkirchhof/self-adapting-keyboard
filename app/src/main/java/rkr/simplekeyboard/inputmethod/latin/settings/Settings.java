@@ -13,6 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Modification copyright (C) 2020 Michael Kirchhof
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package rkr.simplekeyboard.inputmethod.latin.settings;
 
@@ -60,6 +75,12 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_SPACE_SWIPE = "pref_space_swipe";
     public static final String PREF_DELETE_SWIPE = "pref_delete_swipe";
     public static final String PREF_MATCHING_NAVBAR_COLOR = "pref_matching_navbar_color";
+
+    public static final String PREF_RESET_LAYOUTS = "pref_reset_layouts";
+    //public static final String PREF_EXPORT_LAYOUTS = "pref_export_layouts";
+    //public static final String PREF_IMPORT_LAYOUTS = "pref_import_layouts";
+    public static final String PREF_RUN_LEARNER = "pref_run_learner";
+    public static final String PREF_AUTO_LEARN = "pref_auto_learn";
 
     private static final float UNDEFINED_PREFERENCE_VALUE_FLOAT = -1.0f;
     private static final int UNDEFINED_PREFERENCE_VALUE_INT = -1;

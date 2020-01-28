@@ -13,6 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Modification copyright (C) 2020 Michael Kirchhof
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package rkr.simplekeyboard.inputmethod.latin;
 
@@ -44,6 +59,9 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.ExtractedText;
+import android.view.inputmethod.ExtractedTextRequest;
+import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodSubtype;
 
 import java.io.FileDescriptor;
@@ -74,6 +92,9 @@ import rkr.simplekeyboard.inputmethod.latin.utils.IntentUtils;
 import rkr.simplekeyboard.inputmethod.latin.utils.LeakGuardHandlerWrapper;
 import rkr.simplekeyboard.inputmethod.latin.utils.ResourceUtils;
 import rkr.simplekeyboard.inputmethod.latin.utils.ViewLayoutUtils;
+import rkr.simplekeyboard.inputmethod.learner.CutPasteListener;
+import rkr.simplekeyboard.inputmethod.learner.KeyStats;
+import rkr.simplekeyboard.inputmethod.learner.Logger;
 
 /**
  * Input method implementation for Qwerty'ish keyboard.
@@ -91,6 +112,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     private int mOriginalNavBarColor = 0;
     private int mOriginalNavBarFlags = 0;
     final InputLogic mInputLogic = new InputLogic(this /* LatinIME */);
+
+    private Logger mLogger;
+    private InputConnection mIC;
 
     // TODO: Move these {@link View}s to {@link KeyboardSwitcher}.
     private View mInputView;
@@ -324,6 +348,8 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     public LatinIME() {
         super();
+        Log.d(TAG, "Starting background service.");
+
         mSettings = Settings.getInstance();
         mKeyboardSwitcher = KeyboardSwitcher.getInstance();
     }
@@ -361,6 +387,8 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     @Override
     public void onDestroy() {
+
+        mLogger.save(this);
         mSettings.onDestroy();
         unregisterReceiver(mRingerModeChangeReceiver);
         super.onDestroy();
@@ -458,6 +486,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         mRichImm.refreshSubtypeCaches();
         final KeyboardSwitcher switcher = mKeyboardSwitcher;
         switcher.updateKeyboardTheme();
+        switcher.updateKeyboardLayout();
         final MainKeyboardView mainKeyboardView = switcher.getMainKeyboardView();
         // If we are starting input in a different text field from before, we'll have to reload
         // settings, so currentSettingsValues can't be final.
@@ -481,9 +510,24 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                     + ", word caps = "
                     + ((editorInfo.inputType & InputType.TYPE_TEXT_FLAG_CAP_WORDS) != 0));
         }
-        Log.i(TAG, "Starting input. Cursor position = "
-                + editorInfo.initialSelStart + "," + editorInfo.initialSelEnd);
 
+        // Read current status of text and setup logger
+        if(DebugFlags.DEBUG_ENABLED) {
+            Log.i(TAG, "Starting input. Cursor position = "
+                    + editorInfo.initialSelStart + "," + editorInfo.initialSelEnd);
+        }
+        int textLength = 0;
+        mIC = getCurrentInputConnection();
+        if(mIC != null) {
+            ExtractedText et = mIC.getExtractedText(new ExtractedTextRequest(), 0);
+            if (et != null) {
+                textLength = et.text.length();
+            }
+        }
+        if (mLogger != null) {
+            mLogger.save(this);
+        }
+        mLogger = new Logger(textLength);
         // In landscape mode, this method gets called without the input view being created.
         if (mainKeyboardView == null) {
             return;
@@ -592,6 +636,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     }
 
     void onFinishInputViewInternal(final boolean finishingInput) {
+        Log.d(TAG, "Finishing Input.");
+        mLogger.save(this);
+        mLogger = null;
         super.onFinishInputView(finishingInput);
     }
 
@@ -937,11 +984,54 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         feedbackManager.performAudioFeedback(code);
     }
 
+    // validates that the logger and actual text are still matching. Restarts logger if necessary.
+    public void validateLogger(){
+        String curText = mIC.getExtractedText(new ExtractedTextRequest(), 0).text.toString();
+        boolean isLoggerOk = mLogger.matchesText(curText);
+        if(!isLoggerOk){
+            mLogger.save(this);
+            mLogger = new Logger(curText.length());
+            Log.d(TAG, "Restarted Logger.");
+        }
+    }
+
     // Callback of the {@link KeyboardActionListener}. This is called when a key is depressed;
     // release matching call is {@link #onReleaseKey(int,boolean)} below.
     @Override
     public void onPressKey(final int primaryCode, final int repeatCount,
             final boolean isSinglePointer) {
+        validateLogger();
+        ExtractedText et = mIC.getExtractedText(new ExtractedTextRequest(), 0);
+        int selStart = et.selectionStart;
+        int selEnd = et.selectionEnd;
+        Log.d(TAG, "Pressed Key " + primaryCode + ", cursorPos = " + selStart);
+        if(primaryCode == -5 & repeatCount > 1){
+            mLogger.delete(selStart - 1, selEnd - 1);
+        }
+        mKeyboardSwitcher.onPressKey(primaryCode, isSinglePointer, getCurrentAutoCapsState(),
+                getCurrentRecapitalizeState());
+        hapticAndAudioFeedback(primaryCode, repeatCount);
+    }
+
+    public void onPressKey(final int primaryCode, char text, final int repeatCount,
+                           final boolean isSinglePointer, int x, int y) {
+        validateLogger();
+        ExtractedText et = mIC.getExtractedText(new ExtractedTextRequest(), 0);
+        int selStart = et.selectionStart;
+        int selEnd = et.selectionEnd;
+        //Log.d(TAG, "Pressed Key " + text + ", Code = " + primaryCode + ", x = " + x + ", y = " + y + ", pos = " + selStart);
+
+        //TODO: Make this restarting work and implement it into the worker
+        //Log.v(TAG, "Stopping LatinIME Service...");
+        //stopService(new Intent(this, rkr.simplekeyboard.inputmethod.latin.LatinIME.class));
+        // startService(...)
+
+        if(primaryCode == -5){
+            mLogger.delete(selStart - 1, selEnd - 1);
+        } else if(primaryCode >= 0){
+            mLogger.set(selStart, selEnd, primaryCode, text, x, y,
+                    mKeyboardSwitcher.getKeyboard().mId.layoutHashCode());
+        }
         mKeyboardSwitcher.onPressKey(primaryCode, isSinglePointer, getCurrentAutoCapsState(),
                 getCurrentRecapitalizeState());
         hapticAndAudioFeedback(primaryCode, repeatCount);
