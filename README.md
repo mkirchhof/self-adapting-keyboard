@@ -4,7 +4,7 @@
       alt="closeup"
       width="500"/>
       
-Tired of typos? Sick of missing the keys on your tiny smartphone keyboard? This Android keyboard automatically learns an optimal keyboard layout fitted to your individual typing style! Keys will be positioned and sized in an optimal way to reduce your mistyping rate. Just start using the keyboard and after some typing you'll notice the keyboard apapting its layout on its own.
+Tired of typos? Sick of missing the keys on your tiny smartphone keyboard? This Android keyboard automatically learns an optimal keyboard layout fitted to your individual typing style! Keys will be positioned and sized in an optimal way to reduce your mistyping rate. Just start using the keyboard and after some typing you'll notice the keyboard adapting its layout on its own.
 
 ## Features
 
