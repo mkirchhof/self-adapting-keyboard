@@ -31,19 +31,19 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:key="english_ime_settings">
     <PreferenceScreen
-        android:fragment="rkr.simplekeyboard.inputmethod.latin.settings.PreferencesSettingsFragment"
+        android:fragment="mkirchhof.selfadaptingkeyboard.inputmethod.latin.settings.PreferencesSettingsFragment"
         android:title="@string/settings_screen_preferences"
         android:key="screen_preferences" />
     <PreferenceScreen
-        android:fragment="rkr.simplekeyboard.inputmethod.latin.settings.AppearanceSettingsFragment"
+        android:fragment="mkirchhof.selfadaptingkeyboard.inputmethod.latin.settings.AppearanceSettingsFragment"
         android:title="@string/settings_screen_appearance"
         android:key="screen_appearance" />
     <PreferenceScreen
-        android:fragment="rkr.simplekeyboard.inputmethod.latin.settings.AdvancedSettingsFragment"
+        android:fragment="mkirchhof.selfadaptingkeyboard.inputmethod.latin.settings.AdvancedSettingsFragment"
         android:title="@string/settings_screen_advanced"
         android:key="screen_advanced" />
     <PreferenceScreen
-        android:fragment="rkr.simplekeyboard.inputmethod.latin.settings.LearnerSettingsFragment"
+        android:fragment="mkirchhof.selfadaptingkeyboard.inputmethod.latin.settings.LearnerSettingsFragment"
         android:title="Tailored Layouts"
         android:key="screen_learner" />
 </PreferenceScreen>

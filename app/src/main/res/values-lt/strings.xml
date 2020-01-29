@@ -64,5 +64,5 @@
     <string name="space_swipe">Judinti kursorių tarpo klavišu</string>
     <string name="delete_swipe">Trynimo klavišo braukimas</string>
     <string name="matching_navbar_color">Atitinkama navigacijos juostos spalva</string>
-    <string name="setup_message">Simple Keyboard yra neįgalinta. Spauskite OK kad atidaryti Kalbos ir įvestis nustatymus. Simple Keyboard galėsite pasirinkti dabartinėje klaviatūroje.</string>
+    <string name="setup_message">Self Adapting Keyboard yra neįgalinta. Spauskite OK kad atidaryti Kalbos ir įvestis nustatymus. Self Adapting Keyboard galėsite pasirinkti dabartinėje klaviatūroje.</string>
 </resources>
