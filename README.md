@@ -17,7 +17,7 @@ Tired of typos? Sick of missing the keys on your tiny smartphone keyboard? This 
 
 ## How to install
 
-Download the most recent .apk from [here](https://github.com/mkirchhof/self-adapting-keyboard/releases) and install it on your device. Once installed, activate the keyboard in your device's settings and choose it as your primary keyboard by clicking on the small keyboard symbol in the bottom right edge of your screen ([Tutorial](https://support.swiftkey.com/hc/en-us/articles/201591521-How-do-I-switch-between-and-manage-my-keyboards-)). After a short while, you'll notice the keyboard adapting to your personal typing style.
+Download the most recent .apk from [here](https://github.com/mkirchhof/self-adapting-keyboard/releases) (click on "Assets") and install it on your device. Once installed, activate the keyboard in your device's settings and choose it as your primary keyboard by clicking on the small keyboard symbol in the bottom right edge of your screen ([Tutorial](https://support.swiftkey.com/hc/en-us/articles/201591521-How-do-I-switch-between-and-manage-my-keyboards-)). After a short while, you'll notice the keyboard adapting to your personal typing style.
 
 ## Privacy on a third-party keybard?
 
