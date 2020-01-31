@@ -23,9 +23,12 @@ Download the most recent .apk from [here](https://github.com/mkirchhof/self-adap
 
 I'm a huge supporter of privacy - especially when it comes to intimate data such as what you type on your phone. That's why I put all of this app's source code openly available here. The app has no permissions for internet or file-system access. All data this app stores is saved in the app's secure memory so that no other app or user has access to it. Note: if you use a rooted device, malicious apps might invade this storage, which is why I do not recommend using this app on a rooted device.
 
+## Can you implement Swype/Autocorrection/Word prediction?
+I'm afraid I don't have the time to implement all these features into the app, as it's only a hobby project. My plan is to keep this app a prototype that shows this one feature - and hope that other keyboard app developers will see it and implement it into their apps, too! So if you'd like to see this self-adaption feature in your favourite keyboard app, I'd be honored if you sent the devs a link to this github page and ask them to implement it :)
+
 ## If you're a developer yourself:
 
-I'd love to see you implementing this self-adaption mechanism into your own keyboard apps! I'll soon upload a high-level documentation of the code and links to some research on how to optimally implement it. Be sure to send me a message if you do implement this functionality as I'd love to try out your apps, too :)
+I'd love to see you implementing this self-adaption mechanism into your own keyboard apps! I'll soon upload a high-level documentation of the code and links to some research on how to optimally implement it. Be sure to send me a mail if you do implement this functionality as I'd love to try out your apps, too :)
 
 ## Credits
 
