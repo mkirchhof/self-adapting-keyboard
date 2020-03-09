@@ -28,10 +28,10 @@ I'm afraid I don't have the time to implement all these features into the app, a
 
 ## If you're a developer yourself:
 
-I'd love to see you implementing this self-adaption mechanism into your own keyboard apps! I'll soon upload a high-level documentation of the code and links to some research on how to optimally implement it. Be sure to send me a mail if you do implement this functionality as I'd love to try out your apps, too :)
+I'd love to see you implementing this self-adaption mechanism into your own keyboard apps! You can find a high-level documentation of the implementation [here](https://github.com/mkirchhof/self-adapting-keyboard/blob/master/doc/implementation_overview.pdf) and some laboratory experiments with similar approaches [here](https://www.researchgate.net/publication/262348122_Making_touchscreen_keyboards_adaptive_to_keys_hand_postures_and_individuals_-_A_hierarchical_spatial_backoff_model_approach) and [here](https://dl.acm.org/doi/pdf/10.1145/604045.604061). Be sure to send me a mail if you do implement this functionality as I'd love to try out your app, too :)
 
 ## Credits
 
 Licensed under Apache License Version 2.
 
-This keyboard is based on the [Simple Keyboard](https://github.com/rkkr/simple-keyboard), which in turn is based on the AOSP LatineIME keyboard. You can get the original source code in https://android.googlesource.com/platform/packages/inputmethods/LatinIME/
+This keyboard is based on the [Simple Keyboard](https://github.com/rkkr/simple-keyboard), which in turn is based on the [AOSP LatinIME keyboard](https://android.googlesource.com/platform/packages/inputmethods/LatinIME/)

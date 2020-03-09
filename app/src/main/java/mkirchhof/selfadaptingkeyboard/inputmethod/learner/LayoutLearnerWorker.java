@@ -17,6 +17,7 @@
 package mkirchhof.selfadaptingkeyboard.inputmethod.learner;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
@@ -24,6 +25,7 @@ import androidx.work.WorkerParameters;
 
 // this is a background task collecting the cached loggers and calculating an optimal keyboard layout
 public class LayoutLearnerWorker extends Worker {
+    private static final String TAG = LayoutLearnerWorker.class.getSimpleName();
     Context mContext;
 
     public LayoutLearnerWorker(@NonNull Context context, @NonNull WorkerParameters params){
@@ -34,6 +36,8 @@ public class LayoutLearnerWorker extends Worker {
     // this is the code chunk that gets called each night
     @Override
     public Result doWork(){
+        Log.i(TAG, "Running scheduled LayoutLearner");
+
         LayoutLearner ll = new LayoutLearner(mContext);
 
         ll.learn();
