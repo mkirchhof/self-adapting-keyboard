@@ -385,8 +385,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     @Override
     public void onDestroy() {
-
-        mLogger.save(this);
+        if(mLogger != null) {
+            mLogger.save(this);
+        }
         mSettings.onDestroy();
         unregisterReceiver(mRingerModeChangeReceiver);
         super.onDestroy();
@@ -635,7 +636,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     void onFinishInputViewInternal(final boolean finishingInput) {
         Log.d(TAG, "Finishing Input.");
-        mLogger.save(this);
+        if(mLogger != null) {
+            mLogger.save(this);
+        }
         mLogger = null;
         super.onFinishInputView(finishingInput);
     }
